@@ -12,9 +12,22 @@ const AddEditItemModal = ({ show, handleClose, item }) => {
   const [formData, setFormData] = useState({
     name: "",
     sku: "",
-    quantity: 0,
     price: 0,
     category: "",
+    variants: [
+      {
+        size: "",
+        color: "",
+        inventory: {
+          quantity: 0,
+          reserved: 0,
+          available: 0,
+          lowStockThreshold: 0,
+          trackInventory: true,
+        },
+        status: "in_stock"
+      }
+    ]
   });
 
   const isEditMode = item !== null;
@@ -24,23 +37,49 @@ const AddEditItemModal = ({ show, handleClose, item }) => {
       setFormData({
         name: item.name || "",
         sku: item.sku || "",
-        quantity: item.quantity || 0,
         price: item.price || 0,
         category: item.category || "",
+        variants: item.variants || [
+          {
+            size: "",
+            color: "",
+            inventory: {
+              quantity: 0,
+              reserved: 0,
+              available: 0,
+              lowStockThreshold: 0,
+              trackInventory: true,
+            },
+            status: "in_stock"
+          }
+        ]
       });
     } else {
       setFormData({
         name: "",
         sku: "",
-        quantity: 0,
         price: 0,
         category: "",
+        variants: [
+          {
+            size: "",
+            color: "",
+            inventory: {
+              quantity: 0,
+              reserved: 0,
+              available: 0,
+              lowStockThreshold: 0,
+              trackInventory: true,
+            },
+            status: "in_stock"
+          }
+        ]
       });
     }
   }, [item, show, isEditMode]);
 
   useEffect(() => {
-    // Clear errors and status when modal opens
+    
     if (show) {
       dispatch(clearError());
       dispatch(clearAddUpdateStatus());
@@ -48,11 +87,11 @@ const AddEditItemModal = ({ show, handleClose, item }) => {
   }, [show, dispatch]);
 
   useEffect(() => {
-    // Handle success/error states
+    
     if (addUpdateStatus === 'succeeded') {
       toast.success(isEditMode ? "Item updated successfully!" : "Item added successfully!");
       handleClose();
-      // Clear the status after a short delay
+      
       setTimeout(() => {
         dispatch(clearAddUpdateStatus());
       }, 100);
@@ -66,16 +105,69 @@ const AddEditItemModal = ({ show, handleClose, item }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleVariantChange = (idx, field, value) => {
+    setFormData((prev) => {
+      const variants = [...prev.variants];
+      if (field.startsWith('inventory.')) {
+        const invField = field.split('.')[1];
+        variants[idx].inventory[invField] = invField === 'trackInventory' ? value : Number(value);
+        
+        if (invField === 'quantity' || invField === 'reserved') {
+          variants[idx].inventory.available = variants[idx].inventory.quantity - variants[idx].inventory.reserved;
+        }
+      } else {
+        variants[idx][field] = value;
+      }
+      return { ...prev, variants };
+    });
+  };
+
+  const handleAddVariant = () => {
+    setFormData((prev) => ({
+      ...prev,
+      variants: [
+        ...prev.variants,
+        {
+          size: "",
+          color: "",
+          inventory: {
+            quantity: 0,
+            reserved: 0,
+            available: 0,
+            lowStockThreshold: 0,
+            trackInventory: true,
+          },
+          status: "in_stock"
+        }
+      ]
+    }));
+  };
+
+  const handleRemoveVariant = (idx) => {
+    setFormData((prev) => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== idx)
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const itemData = {
       ...formData,
-      quantity: parseInt(formData.quantity, 10),
       price: parseFloat(formData.price),
+      variants: formData.variants.map(v => ({
+        ...v,
+        inventory: {
+          ...v.inventory,
+          quantity: Number(v.inventory.quantity),
+          reserved: Number(v.inventory.reserved),
+          available: Number(v.inventory.available),
+          lowStockThreshold: Number(v.inventory.lowStockThreshold),
+          trackInventory: Boolean(v.inventory.trackInventory)
+        }
+      }))
     };
-    
     if (isEditMode) {
-      // Include the id when updating
       const updateData = {
         ...itemData,
         id: item.id
@@ -132,32 +224,18 @@ const AddEditItemModal = ({ show, handleClose, item }) => {
             required
           />
         </div>
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label className="form-label">Quantity</label>
-            <input
-              type="number"
-              name="quantity"
-              className="form-control"
-              value={formData.quantity}
-              onChange={handleChange}
-              min="0"
-              required
-            />
-          </div>
-          <div className="col-md-6 mb-3">
-            <label className="form-label">Price</label>
-            <input
-              type="number"
-              step="0.01"
-              name="price"
-              className="form-control"
-              value={formData.price}
-              onChange={handleChange}
-              min="0"
-              required
-            />
-          </div>
+        <div className="mb-3">
+          <label className="form-label">Price</label>
+          <input
+            type="number"
+            step="0.01"
+            name="price"
+            className="form-control"
+            value={formData.price}
+            onChange={handleChange}
+            min="0"
+            required
+          />
         </div>
         <div className="mb-3">
           <label className="form-label">Category</label>
@@ -167,8 +245,115 @@ const AddEditItemModal = ({ show, handleClose, item }) => {
             className="form-control"
             value={formData.category}
             onChange={handleChange}
-            placeholder="e.g., Electronics, Furniture, etc."
+            placeholder="e.g., Men, Women, Kids, etc."
           />
+        </div>
+        <hr />
+        <h5>Variants</h5>
+        {formData.variants.map((variant, idx) => (
+          <div key={idx} className="border rounded p-3 mb-4 bg-light">
+            <div className="row g-3 align-items-end mb-2">
+              <div className="col-md-3">
+                <label className="form-label">Size</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={variant.size}
+                  onChange={e => handleVariantChange(idx, 'size', e.target.value)}
+                  placeholder="e.g., M, L, XL"
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Color</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={variant.color}
+                  onChange={e => handleVariantChange(idx, 'color', e.target.value)}
+                  placeholder="e.g., Red, Blue"
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Status</label>
+                <select
+                  className="form-select"
+                  value={variant.status}
+                  onChange={e => handleVariantChange(idx, 'status', e.target.value)}
+                >
+                  <option value="in_stock">In Stock</option>
+                  <option value="out_of_stock">Out of Stock</option>
+                  <option value="discontinued">Discontinued</option>
+                </select>
+              </div>
+              <div className="col-md-3 d-flex justify-content-end">
+                {formData.variants.length > 1 && (
+                  <button type="button" className="btn btn-outline-danger" onClick={() => handleRemoveVariant(idx)}>
+                    Remove Variant
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="row g-3 mb-2">
+              <div className="col-md-2">
+                <label className="form-label">Quantity</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={variant.inventory.quantity}
+                  onChange={e => handleVariantChange(idx, 'inventory.quantity', e.target.value)}
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">Reserved</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={variant.inventory.reserved}
+                  onChange={e => handleVariantChange(idx, 'inventory.reserved', e.target.value)}
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="col-md-2">
+                <label className="form-label">Available</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={variant.inventory.available}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-3">
+                <label className="form-label">Low Stock Threshold</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={variant.inventory.lowStockThreshold}
+                  onChange={e => handleVariantChange(idx, 'inventory.lowStockThreshold', e.target.value)}
+                  min="0"
+                  required
+                />
+              </div>
+              <div className="col-md-3 d-flex align-items-center mt-4">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={variant.inventory.trackInventory}
+                    onChange={e => handleVariantChange(idx, 'inventory.trackInventory', e.target.checked)}
+                  />
+                  <label className="form-check-label">Track Inventory</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="d-flex justify-content-end">
+          <button type="button" className="btn btn-outline-primary mb-3" onClick={handleAddVariant}>
+            Add Variant
+          </button>
         </div>
       </form>
     </Modal>
