@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 const AdvancedFilter = ({ onFilterChange, onClearFilters }) => {
   const [filters, setFilters] = useState({
     category: '',
+    gender: '',
+    ageGroup: '',
     status: '',
     stockLevel: '',
     trackInventory: '',
@@ -19,6 +21,8 @@ const AdvancedFilter = ({ onFilterChange, onClearFilters }) => {
   const handleClearFilters = () => {
     const clearedFilters = {
       category: '',
+      gender: '',
+      ageGroup: '',
       status: '',
       stockLevel: '',
       trackInventory: '',
@@ -64,11 +68,40 @@ const AdvancedFilter = ({ onFilterChange, onClearFilters }) => {
               onChange={(e) => handleFilterChange('category', e.target.value)}
             >
               <option value="">All Categories</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Books">Books</option>
-              <option value="Home & Garden">Home & Garden</option>
-              <option value="Sports">Sports</option>
+              <option value="Apparel">Apparel</option>
+              <option value="Tops">Tops</option>
+              <option value="T-Shirts">T-Shirts</option>
+              <option value="Outerwear">Outerwear</option>
+              <option value="Hoodies">Hoodies</option>
+              <option value="Dresses">Dresses</option>
+            </select>
+          </div>
+          
+          <div className="col-md-3">
+            <label className="form-label">Gender</label>
+            <select
+              className="form-select"
+              value={filters.gender}
+              onChange={(e) => handleFilterChange('gender', e.target.value)}
+            >
+              <option value="">All Genders</option>
+              <option value="men">Men</option>
+              <option value="women">Women</option>
+              <option value="unisex">Unisex</option>
+            </select>
+          </div>
+          
+          <div className="col-md-3">
+            <label className="form-label">Age Group</label>
+            <select
+              className="form-select"
+              value={filters.ageGroup}
+              onChange={(e) => handleFilterChange('ageGroup', e.target.value)}
+            >
+              <option value="">All Ages</option>
+              <option value="adult">Adult</option>
+              <option value="teen">Teen</option>
+              <option value="kids">Kids</option>
             </select>
           </div>
           
@@ -80,12 +113,14 @@ const AdvancedFilter = ({ onFilterChange, onClearFilters }) => {
               onChange={(e) => handleFilterChange('status', e.target.value)}
             >
               <option value="">All Status</option>
-              <option value="in_stock">In Stock</option>
-              <option value="out_of_stock">Out of Stock</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
               <option value="discontinued">Discontinued</option>
             </select>
           </div>
-          
+        </div>
+        
+        <div className="row g-3 mt-2">
           <div className="col-md-3">
             <label className="form-label">Stock Level</label>
             <select
