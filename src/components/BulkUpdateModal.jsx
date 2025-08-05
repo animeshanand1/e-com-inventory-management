@@ -48,13 +48,89 @@ const BulkUpdateModal = ({ show, handleClose }) => {
   };
 
   const downloadTemplate = () => {
-    
-    const csvContent = "productId,variantIndex,field,newValue\n1,0,quantity,100\n1,0,lowStockThreshold,10\n2,1,quantity,75";
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const jsonTemplate = [
+      {
+        "name": "Sample Product Name",
+        "description": "Detailed product description",
+        "brand": "Brand Name",
+        "category": {
+          "primary": "Apparel",
+          "secondary": "Dresses"
+        },
+        "subcategory": "Summer Dresses",
+        "slug": "sample-product-name",
+        "status": "active",
+        "visibility": "visible",
+        "publishedAt": new Date().toISOString(),
+        "pricing": {
+          "basePrice": 1200,
+          "salePrice": 999,
+          "currency": "INR"
+        },
+        "variants": [
+          {
+            "sku": "SKU12345-1",
+            "attributes": {
+              "color": {
+                "name": "Red",
+                "hex": "#ff0000",
+                "image": "https://example.com/color-red.png"
+              },
+              "size": "M"
+            },
+            "images": [
+              {
+                "url": "https://example.com/product-image.jpg",
+                "alt": "Front view",
+                "isPrimary": true,
+                "order": 1,
+                "type": "front"
+              }
+            ],
+            "inventory": {
+              "quantity": 50,
+              "reserved": 0,
+              "available": 50,
+              "lowStockThreshold": 5,
+              "trackInventory": true
+            },
+            "physical": {
+              "weight": 0.5,
+              "dimensions": {
+                "length": 30,
+                "width": 20,
+                "height": 2
+              }
+            }
+          }
+        ],
+        "specifications": {
+          "closure": "Zipper",
+          "soleMaterial": "Rubber",
+          "upperMaterial": "Cotton",
+          "insole": "Foam",
+          "careInstructions": [
+            "Machine wash cold",
+            "Do not bleach"
+          ]
+        },
+        "isOnSale": true,
+        "featured": false,
+        "isNew": true,
+        "seo": {
+          "metaTitle": "Buy Sample Product Online",
+          "metaDescription": "Best product for your needs",
+          "metaKeywords": "product, sample, category"
+        }
+      }
+    ];
+
+    const jsonContent = JSON.stringify(jsonTemplate, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'inventory_bulk_update_template.csv';
+    a.download = 'admin_bulk_product_upload_template.json';
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -91,11 +167,11 @@ const BulkUpdateModal = ({ show, handleClose }) => {
               ref={fileInputRef}
               type="file"
               className="form-control"
-              accept=".csv,.xlsx,.xls"
+              accept=".json,.csv,.xlsx,.xls"
               onChange={handleFileSelect}
             />
             <small className="form-text text-muted">
-              Upload a CSV or Excel file with inventory updates. File should contain: productId, variantIndex, field, newValue
+              Upload a JSON file with product data matching the template structure. File should be an array of product objects.
             </small>
           </div>
           <div className="col-md-4 d-flex align-items-end">
