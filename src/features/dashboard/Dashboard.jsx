@@ -5,9 +5,11 @@ import { fetchDashboardSummary, selectDashboardSummary, selectDashboardStatus } 
 import Loader from "../../components/common/Loader";
 
 const Dashboard = () => {
+  console.log('Dashboard component mounted');
   const dispatch = useDispatch();
   const dashboardStatus = useSelector(selectDashboardStatus);
   const summary = useSelector(selectDashboardSummary);
+  console.log('Redux state:', { dashboardStatus, summary });
 
   useEffect(() => {
     if (dashboardStatus === "idle") {
@@ -17,6 +19,16 @@ const Dashboard = () => {
 
   if (dashboardStatus === "loading") {
     return <Loader />;
+  }
+
+  const isAllZero = [summary.totalItems, summary.lowStockCount, summary.totalQuantity, summary.totalValue, summary.totalRevenue].every(v => v === 0);
+  let fallback = null;
+  if (isAllZero && summary.productCount !== undefined) {
+    fallback = (
+      <div className="alert alert-warning mt-3">Raw backend response:<br />
+        <pre>{JSON.stringify(summary, null, 2)}</pre>
+      </div>
+    );
   }
 
   return (
@@ -48,8 +60,14 @@ const Dashboard = () => {
             icon="bi-currency-dollar"
             colorClass="bg-info"
           />
+          <KPIWidget
+            title="Total Revenue"
+            value={`INR${summary.totalRevenue.toLocaleString()}`}
+            icon="bi-graph-up-arrow"
+            colorClass="bg-success"
+          />
         </div>
-        {/* You can add more dashboard components here, like a recent activity feed or a quick-look at low-stock items */}
+        {fallback}
       </div>
     </div>
   );
