@@ -41,48 +41,116 @@ const InventoryTable = ({ items, onEdit, sortConfig, setSortConfig }) => {
       <table className="table table-hover align-middle">
         <thead>
           <tr>
-            <SortableHeader name="name" {...{sortConfig, setSortConfig}}>Name</SortableHeader>
-            <SortableHeader name="sku" {...{sortConfig, setSortConfig}}>SKU</SortableHeader>
+            <SortableHeader name="name" {...{sortConfig, setSortConfig}}>Product Name</SortableHeader>
+            <SortableHeader name="brand" {...{sortConfig, setSortConfig}}>Brand</SortableHeader>
             <SortableHeader name="category" {...{sortConfig, setSortConfig}}>Category</SortableHeader>
-            <SortableHeader name="price" {...{sortConfig, setSortConfig}}>Price</SortableHeader>
-            <SortableHeader name="quantity" {...{sortConfig, setSortConfig}}>Quantity</SortableHeader>
+            <SortableHeader name="pricing.basePrice" {...{sortConfig, setSortConfig}}>Price</SortableHeader>
+            <th>Variants</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {items.length > 0 ? items.map(item => (
-            <tr key={item.id} className={item.quantity <= LOW_STOCK_THRESHOLD ? 'table-warning' : ''}>
-              <td>{item.name}</td>
-              <td>{item.sku}</td>
-              <td>{item.category || 'Uncategorized'}</td>
-              <td>₹{parseFloat(item.price).toFixed(2)}</td>
+            <tr key={item.id}>
               <td>
-                {item.quantity}
-                {item.quantity <= LOW_STOCK_THRESHOLD && 
-                  <span className="badge bg-danger ms-2" title="Low Stock">
-                    <i className="bi bi-exclamation-triangle"></i>
-                  </span>
-                }
+                <strong>{item.name}</strong>
+                {item.isNew && <span className="badge bg-success ms-2">New</span>}
+                {item.featured && <span className="badge bg-primary ms-2">Featured</span>}
+                {item.isOnSale && <span className="badge bg-warning ms-2">On Sale</span>}
+              </td>
+              <td>{item.brand}</td>
+              <td>
+                {item.category?.primary}
+                {item.category?.secondary && (
+                  <><br /><small className="text-muted">{item.category.secondary}</small></>
+                )}
               </td>
               <td>
-                <button 
-                  className="btn btn-sm btn-outline-primary me-2" 
-                  onClick={() => onEdit(item)}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="btn btn-sm btn-outline-danger" 
-                  onClick={() => handleDelete(item.id)}
-                  disabled={status === 'loading'}
-                >
-                  {status === 'loading' ? 'Deleting...' : 'Delete'}
-                </button>
+                ₹{parseFloat(item.pricing?.basePrice || 0).toFixed(2)}
+                {item.pricing?.salePrice && item.pricing.salePrice < item.pricing.basePrice && (
+                  <><br /><small className="text-success">Sale: ₹{parseFloat(item.pricing.salePrice).toFixed(2)}</small></>
+                )}
+              </td>
+              <td>
+                {item.variants && item.variants.length > 0 ? (
+                  <table className="table table-bordered table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>SKU</th>
+                        <th>Size</th>
+                        <th>Color</th>
+                        <th>Quantity</th>
+                        <th>Reserved</th>
+                        <th>Available</th>
+                        <th>Low Stock Threshold</th>
+                        <th>Track</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {item.variants.map((variant, vIdx) => (
+                        <tr key={vIdx} className={variant.inventory.quantity <= variant.inventory.lowStockThreshold ? 'table-warning' : ''}>
+                          <td><small>{variant.sku}</small></td>
+                          <td>{variant.attributes?.size}</td>
+                          <td>
+                            {variant.attributes?.color?.name}
+                            {variant.attributes?.color?.hex && (
+                              <span 
+                                className="ms-2 d-inline-block" 
+                                style={{
+                                  width: '15px', 
+                                  height: '15px', 
+                                  backgroundColor: variant.attributes.color.hex,
+                                  border: '1px solid #ccc',
+                                  borderRadius: '50%'
+                                }}
+                              ></span>
+                            )}
+                          </td>
+                          <td>{variant.inventory.quantity}</td>
+                          <td>{variant.inventory.reserved}</td>
+                          <td>{variant.inventory.available}</td>
+                          <td>{variant.inventory.lowStockThreshold}</td>
+                          <td>{variant.inventory.trackInventory ? <span className="badge bg-success">Yes</span> : <span className="badge bg-secondary">No</span>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <span className="text-muted">No variants</span>
+                )}
+              </td>
+              <td>
+                <div>
+                  <strong>W:</strong> {item.physical?.weight || 'N/A'} {item.physical?.weightUnit}<br />
+                  <strong>D:</strong> {item.physical?.dimensions?.length}×{item.physical?.dimensions?.width}×{item.physical?.dimensions?.height} {item.physical?.dimensions?.unit}<br />
+                  <strong>Vol:</strong> {item.physical?.volume || 'N/A'} {item.physical?.volumeUnit}
+                </div>
+              </td>
+              <td>
+                <span className={`badge ${item.status === 'active' ? 'bg-success' : item.status === 'inactive' ? 'bg-secondary' : 'bg-warning'}`}>
+                  {item.status}
+                </span>
+              </td>
+              <td>
+                <div className="btn-group" role="group">
+                  <button 
+                    className="btn btn-sm btn-outline-primary" 
+                    onClick={() => onEdit(item)}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="btn btn-sm btn-outline-danger" 
+                    onClick={() => onDelete(item.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
           )) : (
             <tr>
-              <td colSpan="6" className="text-center py-4">No items found.</td>
+              <td colSpan="8" className="text-center py-4">No items found.</td>
             </tr>
           )}
         </tbody>
