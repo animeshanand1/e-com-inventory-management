@@ -5,13 +5,19 @@ import { loginUser, clearError } from './authSlice';
 
 const Login = () => {
   const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password');
+  const [password, setPassword] = useState('password123');
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, status, error } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (user) {
+      console.log('Admin after login:', user);
+      if (user.token) {
+        console.log('Token stored:', user.token);
+      } else {
+        console.warn('No token found in admin object!');
+      }
       navigate('/dashboard');
     }
   }, [user, navigate]);

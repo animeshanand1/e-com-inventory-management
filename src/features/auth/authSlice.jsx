@@ -1,19 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { loginAPI, getCurrentUserAPI, logoutAPI } from '../../api/authApi';
 
-const user = JSON.parse(localStorage.getItem('user'));
+const admin = JSON.parse(localStorage.getItem('admin'));
 
 const initialState = {
-  user: user ? user : null,
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  user: admin ? admin : null,
+  status: 'idle', 
   error: null,
 };
 
 export const loginUser = createAsyncThunk('auth/loginUser', async (credentials, { rejectWithValue }) => {
   try {
     const response = await loginAPI(credentials);
-    // Store the entire user object with token
-    localStorage.setItem('user', JSON.stringify(response.data));
+    
+    localStorage.setItem('admin', JSON.stringify(response.data));
     return response.data;
   } catch (error) {
     return rejectWithValue(error.response?.data?.message || error.message);
@@ -32,11 +32,10 @@ export const getCurrentUser = createAsyncThunk('auth/getCurrentUser', async (_, 
 export const logoutUser = createAsyncThunk('auth/logoutUser', async (_, { rejectWithValue }) => {
   try {
     await logoutAPI();
-    localStorage.removeItem('user');
+    localStorage.removeItem('admin');
     return null;
   } catch (error) {
-    // Even if logout API fails, clear local storage
-    localStorage.removeItem('user');
+    localStorage.removeItem('admin');
     return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
@@ -51,7 +50,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login cases
+     
       .addCase(loginUser.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -65,7 +64,7 @@ const authSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
       })
-      // Get current user cases
+    
       .addCase(getCurrentUser.pending, (state) => {
         state.status = 'loading';
       })
@@ -79,7 +78,7 @@ const authSlice = createSlice({
         state.error = action.payload;
         state.user = null;
       })
-      // Logout cases
+      
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.status = 'idle';
