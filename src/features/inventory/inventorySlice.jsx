@@ -87,7 +87,7 @@ const inventorySlice = createSlice({
       })
       .addCase(fetchInventory.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.items = action.payload.items || action.payload;
+        state.items = action.payload.products || action.payload.items || action.payload;
        
         if (action.payload.totalItems !== undefined) {
           state.pagination = {

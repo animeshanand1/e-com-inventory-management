@@ -39,11 +39,11 @@ const Inventory = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'ascending' });
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // useEffect(() => {
-  //   if (status === 'idle') {
-  //     dispatch(fetchInventory());
-  //   }
-  // }, [status, dispatch]);
+  useEffect(() => {
+    if (status === 'idle') {
+      dispatch(fetchInventory());
+    }
+  }, [status, dispatch]);
 
   useEffect(() => {
    
@@ -82,7 +82,7 @@ const Inventory = () => {
   };
 
   const sortedAndFilteredItems = useMemo(() => {
-    let processableItems = [...items];
+let processableItems = Array.isArray(items) ? [...items] : [];
 
     if (debouncedSearchTerm) {
       processableItems = processableItems.filter(item => 
