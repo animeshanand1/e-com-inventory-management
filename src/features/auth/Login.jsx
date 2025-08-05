@@ -16,13 +16,11 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  // useEffect(() => {
-    
-  //   dispatch(clearError());
-  // }, [dispatch]);
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('Logging in with:', { email, password });
     dispatch(loginUser({ email, password }));
   };
 

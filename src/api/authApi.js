@@ -26,7 +26,7 @@ api.interceptors.response.use(
   (error) => {
     if (
       error.response?.status === 401 &&
-      error.config?.url !== '/api/auth/login'
+      error.config?.url !== '/api/admin/login'
     ) {
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -36,13 +36,13 @@ api.interceptors.response.use(
 );
 
 export const loginAPI = (credentials) => {
-  return api.post('/api/auth/login', credentials);
+  return api.post('/api/admin/login', credentials);
 };
 
 export const getCurrentUserAPI = () => {
-  return api.get('/api/auth/me');
+  return api.get('/api/admin/me');
 };
 
 export const logoutAPI = () => {
-  return api.post('/api/auth/logout');
+  return api.post('/api/admin/logout');
 };
