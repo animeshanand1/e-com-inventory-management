@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { use } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { deleteItem, selectInventoryStatus } from '../features/inventory/inventorySlice';
@@ -14,7 +14,7 @@ const SortableHeader = ({ children, name, sortConfig, setSortConfig }) => {
     }
     setSortConfig({ key: name, direction: newDirection });
   };
-
+  console.log('fetching inventory items with sort:')
   return (
     <th onClick={onSort} style={{ cursor: 'pointer' }}>
       {children}
@@ -58,18 +58,27 @@ const InventoryTable = ({ items, onEdit, sortConfig, setSortConfig }) => {
                 {item.featured && <span className="badge bg-primary ms-2">Featured</span>}
                 {item.isOnSale && <span className="badge bg-warning ms-2">On Sale</span>}
               </td>
-              <td>{item.brand}</td>
+              <td>{item.brand || 'N/A'}</td>
               <td>
-                {item.category?.primary}
+                {typeof item.category === 'string' ? item.category : item.category?.primary || 'N/A'}
                 {item.category?.secondary && (
                   <><br /><small className="text-muted">{item.category.secondary}</small></>
                 )}
+                {item.targetGroup && (
+                  <>
+                    <br />
+                    <small className="text-muted">
+                      For: {Array.isArray(item.targetGroup.gender) ? item.targetGroup.gender.join(', ') : item.targetGroup.gender}
+                      {item.targetGroup.ageGroup && ` | ${item.targetGroup.ageGroup}`}
+                      {item.targetGroup.ageRange && ` | Age: ${item.targetGroup.ageRange.min}-${item.targetGroup.ageRange.max}`}
+                    </small>
+                  </>
+                )}
               </td>
               <td>
-                ₹{parseFloat(item.pricing?.basePrice || 0).toFixed(2)}
-                {item.pricing?.salePrice && item.pricing.salePrice < item.pricing.basePrice && (
-                  <><br /><small className="text-success">Sale: ₹{parseFloat(item.pricing.salePrice).toFixed(2)}</small></>
-                )}
+                ₹{parseFloat(
+                  (item.variants && item.variants[0]?.pricing?.basePrice) || item.pricing?.basePrice || 0
+                ).toFixed(2)}
               </td>
               <td>
                 {item.variants && item.variants.length > 0 ? (
@@ -121,9 +130,9 @@ const InventoryTable = ({ items, onEdit, sortConfig, setSortConfig }) => {
               </td>
               <td>
                 <div>
-                  <strong>W:</strong> {item.physical?.weight || 'N/A'} {item.physical?.weightUnit}<br />
+                  {/* <strong>W:</strong> {item.physical?.weight || 'N/A'} {item.physical?.weightUnit}<br />
                   <strong>D:</strong> {item.physical?.dimensions?.length}×{item.physical?.dimensions?.width}×{item.physical?.dimensions?.height} {item.physical?.dimensions?.unit}<br />
-                  <strong>Vol:</strong> {item.physical?.volume || 'N/A'} {item.physical?.volumeUnit}
+                  <strong>Vol:</strong> {item.physical?.volume || 'N/A'} {item.physical?.volumeUnit} */}
                 </div>
               </td>
               <td>
